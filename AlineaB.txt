@@ -1,0 +1,85 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Constants
+T_ref = 298.15  # Reference temperature (K)
+T_initial = 298.15  # Initial temperature (K)
+R = 8.314  # Universal gas constant (J/mol·K)
+
+# Molar masses (kg/kmol)
+M_CH4 = 16.04
+M_O2 = 32.00
+M_N2 = 28.02
+M_air = 0.21 * M_O2 + 0.79 * M_N2
+
+# Enthalpy of formation at T_ref (J/kmol)
+h_f_CH4 = -74850e3  # Methane
+h_f_O2 = 0
+h_f_N2 = 0
+
+# Heat capacities (Cp, J/kg·K) - assumed constant but they don't really matter 
+Cp_CH4 = 2220
+Cp_O2 = 918
+Cp_N2 = 1040
+
+# Equivalence ratio range
+phi_values = np.arange(0.5, 2.01, 0.01)
+
+# Preallocate lists for results
+h_mix_mass = []
+h_mix_molar = []
+
+# Calculate absolute enthalpy for each equivalence ratio
+for phi in phi_values:
+    # Stoichiometric combustion: CH4 + 2O2 -> ...
+    if phi <= 1.0:
+        # Lean mixture (excess air)
+        moles_CH4 = 1
+        moles_O2 = 2 / phi
+    else:
+        # Rich mixture (excess fuel) will have the most impact on enthalpy
+        moles_CH4 = phi
+        moles_O2 = 2
+
+    # Nitrogen moles (79% of air by volume)
+    moles_N2 = moles_O2 * (79 / 21)
+    total_moles = moles_CH4 + moles_O2 + moles_N2
+
+    # Mass fractions (Yi)
+    Y_CH4 = (moles_CH4 * M_CH4) / (total_moles * M_air)
+    Y_O2 = (moles_O2 * M_O2) / (total_moles * M_air)
+    Y_N2 = (moles_N2 * M_N2) / (total_moles * M_air)
+
+    # Mole fractions (xi)
+    x_CH4 = moles_CH4 / total_moles
+    x_O2 = moles_O2 / total_moles
+    x_N2 = moles_N2 / total_moles
+
+    # Specific enthalpy (hi) at initial temperature, we know its equal to formation enthalpy
+    h_CH4 = h_f_CH4 + Cp_CH4 * (T_initial - T_ref)
+    h_O2 = h_f_O2 + Cp_O2 * (T_initial - T_ref)
+    h_N2 = h_f_N2 + Cp_N2 * (T_initial - T_ref)
+
+    # Molar enthalpy (hi_bar = hi * Mi)
+    h_bar_CH4 = h_CH4 * M_CH4
+    h_bar_O2 = h_O2 * M_O2
+    h_bar_N2 = h_N2 * M_N2
+
+    # Mixture enthalpy (mass basis)
+    h_mix = Y_CH4 * h_CH4 + Y_O2 * h_O2 + Y_N2 * h_N2
+    h_mix_mass.append(h_mix)
+
+    # Mixture enthalpy (molar basis)
+    h_mix_molar_value = x_CH4 * h_bar_CH4 + x_O2 * h_bar_O2 + x_N2 * h_bar_N2
+    h_mix_molar.append(h_mix_molar_value)
+
+# Plot results
+plt.figure(figsize=(10, 6))
+plt.plot(phi_values, h_mix_mass, label="Specific Mass Enthalpy (J/kg)", color="blue")
+plt.plot(phi_values, h_mix_molar, label="Specific Molar Enthalpy (J/kmol)", color="orange")
+plt.xlabel("Equivalence Ratio (φ)")
+plt.ylabel("Enthalpy")
+plt.title("Absolute Enthalpy of Fresh Reacting Mixture")
+plt.legend()
+plt.grid()
+plt.show()

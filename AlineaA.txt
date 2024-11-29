@@ -1,0 +1,85 @@
+a)
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Constants: Molar masses (g/mol)
+M_CH4 = 16.04  # Methane
+M_O2 = 32.00   # Oxygen
+M_N2 = 28.01   # Nitrogen
+
+# Stoichiometric oxygen required for CH4 combustion (in moles)
+# CH4 + 2(O2 + 3.76N2) -> CO2 + 2H2O + 7.52N2
+O2_stoich = 2  # 2 moles of O2 per mole of CH4
+
+# Air composition by mole
+molar_air_ratio = 79 / 21  # Nitrogen/Oxygen ratio in air
+
+# Effective molar mass of air (weighted by composition)
+M_air = 0.21 * M_O2 + 0.79 * M_N2  # Weighted average molar mass of air
+
+# Stoichiometric air-to-fuel ratio (AF_stoich), normalized per mole of CH4
+AF_stoich = O2_stoich * (1 + molar_air_ratio)  # Includes O2 and associated N2 in air
+
+# Define a range of equivalence ratios (phi)
+phi = np.linspace(0.5, 2.0, 100)  # From lean (phi < 1) to rich (phi > 1)
+
+# Initialize arrays to store mole and mass fractions
+x_CH4 = np.zeros_like(phi)
+x_O2 = np.zeros_like(phi)
+x_N2 = np.zeros_like(phi)
+
+y_CH4 = np.zeros_like(phi)
+y_O2 = np.zeros_like(phi)
+y_N2 = np.zeros_like(phi)
+
+# Compute mole and mass fractions across equivalence ratios
+for i, phi_val in enumerate(phi):
+    # Air-to-fuel ratio (AF_actual) for the given equivalence ratio
+    AF_actual = AF_stoich / phi_val
+
+    # Mole fractions of reactants (normalized to CH4 = 1 mole)
+    n_CH4 = 1  # 1 mole of CH4 as reference
+    n_air = AF_actual  # Moles of air per mole of CH4
+    n_O2 = 0.21 * n_air  # Oxygen is 21% of air
+    n_N2 = 0.79 * n_air  # Nitrogen is 79% of air
+    n_total = n_CH4 + n_O2 + n_N2  # Total moles in the mixture
+
+    # Mole fractions
+    x_CH4[i] = n_CH4 / n_total
+    x_O2[i] = n_O2 / n_total
+    x_N2[i] = n_N2 / n_total
+
+    # Mass fractions (using molar masses)
+    m_CH4 = n_CH4 * M_CH4
+    m_O2 = n_O2 * M_O2
+    m_N2 = n_N2 * M_N2
+    m_total = m_CH4 + m_O2 + m_N2  # Total mass in the mixture
+
+    y_CH4[i] = m_CH4 / m_total
+    y_O2[i] = m_O2 / m_total
+    y_N2[i] = m_N2 / m_total
+
+# Plot mole fraction profiles
+plt.figure(figsize=(10, 6))
+plt.plot(phi, x_CH4, label="CH4 Mole Fraction", color="blue")
+plt.plot(phi, x_O2, label="O2 Mole Fraction", color="green")
+plt.plot(phi, x_N2, label="N2 Mole Fraction", color="red")
+plt.xlabel("Equivalence Ratio (φ)")
+plt.ylabel("Mole Fraction")
+plt.title("Reactants Mole Fractions vs. Equivalence Ratio")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Plot mass fraction profiles
+plt.figure(figsize=(10, 6))
+plt.plot(phi, y_CH4, label="CH4 Mass Fraction", color="blue")
+plt.plot(phi, y_O2, label="O2 Mass Fraction", color="green")
+plt.plot(phi, y_N2, label="N2 Mass Fraction", color="red")
+plt.xlabel("Equivalence Ratio (φ)")
+plt.ylabel("Mass Fraction")
+plt.title("Reactants Mass Fractions vs. Equivalence Ratio")
+plt.legend()
+plt.grid(True)
+plt.show()
